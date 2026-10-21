@@ -81,7 +81,7 @@ export default function App() {
       if (onlyVideo && !v.has_remake) return false;
       if (onlyFull && v.prompt_partial) return false;
       if (needle) {
-        const hay = `${v.prompt} ${v.author} ${v.slug} ${v.title || ''}`.toLowerCase();
+        const hay = `${v.prompt} ${v.prompt_zh || ''} ${v.author} ${v.slug} ${v.title || ''} ${v.title_zh || ''}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;

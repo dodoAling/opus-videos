@@ -113,6 +113,8 @@ button { font-family: inherit; }
 }
 .ptoggle:hover { color: var(--sub); }
 .ptoggle.on { color: var(--gold); border-color: var(--gold); background: rgba(242, 181, 68, .1); }
+.ptoggle.sm { padding: 3px 9px; font-size: 11.5px; }
+.mt-hint { font-size: 11px; color: var(--dim); }
 
 select.sel {
   background: var(--panel); border: 1px solid var(--line); color: var(--sub);

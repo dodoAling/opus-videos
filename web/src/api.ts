@@ -10,7 +10,7 @@ export const KIND_FILE: Record<MediaKind, string> = {
 };
 
 export async function loadData(): Promise<{ entries: Entry[]; manifest: Manifest }> {
-  const [entries, manifest] = await Promise.all([
+  const [entries, manifest, zh] = await Promise.all([
     fetch('data/videos.enriched.json').then(r => {
       if (!r.ok) throw new Error('数据集加载失败：' + r.status);
       return r.json() as Promise<Entry[]>;
@@ -18,7 +18,14 @@ export async function loadData(): Promise<{ entries: Entry[]; manifest: Manifest
     fetch('media/local-manifest.json')
       .then(r => (r.ok ? (r.json() as Promise<Manifest>) : {}))
       .catch(() => ({})),
+    fetch('data/videos.zh.json')
+      .then(r => (r.ok ? r.json() : {}))
+      .catch(() => ({})) as Promise<Record<string, { title_zh?: string; prompt_zh?: string }>>,
   ]);
+  for (const e of entries) {
+    const z = zh[e.slug];
+    if (z) { e.prompt_zh = z.prompt_zh; e.title_zh = z.title_zh; }
+  }
   return { entries, manifest };
 }
 

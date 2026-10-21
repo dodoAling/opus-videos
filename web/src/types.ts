@@ -11,6 +11,9 @@ export type Entry = {
   tech: string[];
   prompt: string;
   prompt_partial: boolean;
+  /** scripts/translate_data.py 产出的中文字段，无翻译数据时不存在。 */
+  prompt_zh?: string;
+  title_zh?: string;
   added: string;
   has_remake: boolean;
   urls: Record<MediaKind, string | null>;

@@ -21,6 +21,7 @@ export default memo(function VideoCard({ v, manifest, status, onOpen, onMark, on
   const vidRef = useRef<HTMLVideoElement>(null);
   const preview: 'card' | 'remake_card' | null = v.urls.card ? 'card' : v.urls.remake_card ? 'remake_card' : null;
   const local = !!manifest[v.slug];
+  const promptTxt = (lang === 'zh' && v.prompt_zh) ? v.prompt_zh : v.prompt;
 
   const enter = () => { vidRef.current?.play().catch(() => {}); };
   const leave = () => {
@@ -44,7 +45,7 @@ export default memo(function VideoCard({ v, manifest, status, onOpen, onMark, on
         {status && <span className={`ribbon ${status}`}>{statusLabel(status, lang)}</span>}
       </div>
       <div className="cbody">
-        <div className="prompt">{v.prompt}</div>
+        <div className="prompt">{promptTxt}</div>
         <div className="meta">
           <a className="author" href={v.author_url} target="_blank" rel="noopener">@{v.author}</a>
           <span className="cat">{catLabel(v.category, lang)}</span>
@@ -52,7 +53,7 @@ export default memo(function VideoCard({ v, manifest, status, onOpen, onMark, on
           <span className="date">{v.added}</span>
         </div>
         <div className="cactions">
-          <button className="ibtn grow" onClick={() => copyText(v.prompt, t('toastCopied'), t('toastCopyFail'))}>
+          <button className="ibtn grow" onClick={() => copyText(promptTxt, t('toastCopied'), t('toastCopyFail'))}>
             <Copy size={13} />{t('copyPrompt')}
           </button>
           <button className={`ibtn${status === 'pick' ? ' marked' : ''}`} title={t('tipMarkPick')} onClick={onMark}>

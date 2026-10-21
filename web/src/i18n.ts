@@ -61,6 +61,9 @@ const zh = {
   toastPick: '已加入备选',
   toastExported: '已导出 {n} 条',
   toastCopyFail: '复制失败，请手动复制',
+  viewZh: '译文',
+  viewOrig: '原文',
+  mtHint: '机器翻译，仅供参考',
 };
 
 const en: Record<keyof typeof zh, string> = {
@@ -122,6 +125,9 @@ const en: Record<keyof typeof zh, string> = {
   toastPick: 'Added to picks',
   toastExported: 'Exported {n} items',
   toastCopyFail: 'Copy failed — please copy manually',
+  viewZh: '中文',
+  viewOrig: 'Original',
+  mtHint: 'Machine-translated',
 };
 
 const dicts: Record<Lang, Record<keyof typeof zh, string>> = { zh, en };

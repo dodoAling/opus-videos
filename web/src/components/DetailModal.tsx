@@ -53,8 +53,11 @@ export default function DetailModal(p: Props) {
   const { v, t } = p;
   const dlg = useRef<HTMLDialogElement>(null);
   const [cd, setCd] = useState(0);
+  const hasZh = !!v.prompt_zh || !!v.title_zh;
+  const [zhMode, setZhMode] = useState(p.lang === 'zh' && hasZh);
 
   useEffect(() => { dlg.current?.showModal(); }, []);
+  useEffect(() => { setZhMode(p.lang === 'zh' && hasZh); }, [v.slug]);
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') p.onNav(-1);
@@ -64,11 +67,13 @@ export default function DetailModal(p: Props) {
     return () => window.removeEventListener('keydown', h);
   }, [p.onNav]);
 
+  const promptShown = zhMode && v.prompt_zh ? v.prompt_zh : v.prompt;
+  const titleShown = zhMode && v.title_zh ? v.title_zh : v.title;
   const shareText = () =>
     t('shareTpl', {
-      title: v.title ? v.title + '\n\n' : '',
+      title: titleShown ? titleShown + '\n\n' : '',
       author: '@' + v.author,
-      prompt: v.prompt,
+      prompt: promptShown,
       post: v.post_url,
     });
 
@@ -87,7 +92,7 @@ export default function DetailModal(p: Props) {
       onClick={e => { if (e.target === dlg.current) p.onClose(); }}>
       <div className="modal">
         <div className="mhead">
-          <span className="who">{v.title || '@' + v.author}</span>
+          <span className="who">{titleShown || '@' + v.author}</span>
           <div className="navbtns">
             <span className="idx">{p.idx + 1} / {p.total}</span>
             <button className="xbtn" title={t('prevTip')} onClick={() => p.onNav(-1)}><ChevronLeft size={15} /></button>
@@ -110,7 +115,14 @@ export default function DetailModal(p: Props) {
             )}
           </div>
 
-          <div className="pblock">{v.prompt}</div>
+          {hasZh && (
+            <div className="mrow" style={{ marginBottom: -2 }}>
+              <span className={`ptoggle sm${zhMode ? ' on' : ''}`} onClick={() => setZhMode(true)}>{t('viewZh')}</span>
+              <span className={`ptoggle sm${!zhMode ? ' on' : ''}`} onClick={() => setZhMode(false)}>{t('viewOrig')}</span>
+              <span className="mt-hint">{t('mtHint')}</span>
+            </div>
+          )}
+          <div className="pblock">{promptShown}</div>
           {v.prompt_partial && <div className="pnote">{t('partialNote')}</div>}
 
           <div className="mrow">
@@ -119,7 +131,7 @@ export default function DetailModal(p: Props) {
               {stBtn('posted', <CheckCircle2 size={13} />)}
               {stBtn('skip', <CircleSlash size={13} />)}
             </span>
-            <button className="btn" onClick={() => copyText(v.prompt, t('toastCopied'), t('toastCopyFail'))}><Copy size={13} />{t('copyPrompt')}</button>
+            <button className="btn" onClick={() => copyText(promptShown, t('toastCopied'), t('toastCopyFail'))}><Copy size={13} />{t('copyPrompt')}</button>
             <button className="btn" onClick={() => copyText(shareText(), t('toastShare'), t('toastCopyFail'))}><Share2 size={13} />{t('copyShare')}</button>
             {dlable.length > 0 && (
               <button className="btn"
