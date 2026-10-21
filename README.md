@@ -21,6 +21,9 @@ python scripts/serve.py        # http://localhost:8791
 
 页面功能：
 
+- 界面中英文切换（顶栏 EN/中文，按浏览器语言自动选默认）
+- prompt 与标题内置中文机翻（Argos 离线模型），详情弹窗可切换
+  「译文 / 原文」，复制按钮复制当前显示的版本；搜索同时命中中英文
 - 左栏：全部 / 备选 / 已发 / 跳过 分组计数，分类筛选，技术栈标签云
 - 悬停卡片海报淡入预览视频，点击进详情
 - 详情弹窗：原版 / 重制版并排播放，全屏按钮 + 双击全屏，← → 键翻页，
@@ -71,6 +74,8 @@ python scripts/build_data.py
 - `data/videos.json` — 上游原始数据集
 - `data/media_urls.json` — 从 skillry.dev 列表页抓取的带 hash 卡片 URL
 - `data/videos.enriched.json` / `data.js` — 合并后的成品数据（由 build 脚本生成）
+- `data/videos.zh.json` — 中文机翻缓存（`scripts/translate_data.py` 生成，
+  需先 `pip install argostranslate` 并装 en→zh 模型；可中断续跑）
 
 ## 联系方式
 
