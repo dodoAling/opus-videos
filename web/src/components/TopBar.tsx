@@ -44,9 +44,11 @@ export default function TopBar(p: Props) {
         {p.dense ? <LayoutGrid size={14} /> : <Rows3 size={14} />}
         {p.dense ? t('dense') : t('cozy')}
       </span>
-      <span className="ptoggle" onClick={() => p.setLang(p.lang === 'zh' ? 'en' : 'zh')}>
-        {p.lang === 'zh' ? 'EN' : '中文'}
-      </span>
+      <select className="sel" value={p.lang}
+        onChange={e => p.setLang(e.target.value as Lang)}>
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
       <button className="btn" onClick={p.onExport}>{t('exportFiltered')}</button>
     </div>
   );

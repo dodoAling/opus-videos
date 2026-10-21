@@ -117,9 +117,13 @@ button { font-family: inherit; }
 .mt-hint { font-size: 11px; color: var(--dim); }
 
 select.sel {
-  background: var(--panel); border: 1px solid var(--line); color: var(--sub);
-  border-radius: 8px; padding: 6px 9px; font-size: 12.5px; outline: none; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background: var(--panel) no-repeat right 10px center
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2398a1ad' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+  border: 1px solid var(--line); color: var(--sub);
+  border-radius: 8px; padding: 6px 30px 6px 11px; font-size: 12.5px; outline: none; cursor: pointer;
 }
+select.sel:hover { border-color: var(--line2); color: var(--text); }
 
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
