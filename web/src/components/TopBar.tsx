@@ -1,10 +1,10 @@
 import { LayoutGrid, Rows3, Search } from 'lucide-react';
+import type { Lang, TFunc } from '../i18n';
 
 type Props = {
   q: string;
   setQ: (s: string) => void;
   total: number;
-  shown: number;
   videoCount: number;
   onlyVideo: boolean;
   setOnlyVideo: (b: boolean) => void;
@@ -15,32 +15,39 @@ type Props = {
   dense: boolean;
   setDense: (b: boolean) => void;
   onExport: () => void;
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: TFunc;
 };
 
 export default function TopBar(p: Props) {
+  const t = p.t;
   return (
     <div className="topbar">
       <label className="search">
         <Search size={15} />
         <input value={p.q} onChange={e => p.setQ(e.target.value)}
-          placeholder="搜索 prompt / 作者 / slug…" />
+          placeholder={t('searchPh')} />
       </label>
-      <span className="counts"><b>{p.total}</b> 条 · {p.videoCount} 条含视频</span>
+      <span className="counts">{t('countsTpl', { n: p.total, v: p.videoCount })}</span>
       <span style={{ flex: 1 }} />
       <span className={`ptoggle${p.onlyVideo ? ' on' : ''}`}
-        onClick={() => p.setOnlyVideo(!p.onlyVideo)}>仅看视频</span>
+        onClick={() => p.setOnlyVideo(!p.onlyVideo)}>{t('onlyVideo')}</span>
       <span className={`ptoggle${p.onlyFull ? ' on' : ''}`}
-        onClick={() => p.setOnlyFull(!p.onlyFull)}>仅完整 prompt</span>
+        onClick={() => p.setOnlyFull(!p.onlyFull)}>{t('onlyFull')}</span>
       <select className="sel" value={p.sort} onChange={e => p.setSort(e.target.value as 'new' | 'old')}>
-        <option value="new">最新收录</option>
-        <option value="old">最早收录</option>
+        <option value="new">{t('sortNew')}</option>
+        <option value="old">{t('sortOld')}</option>
       </select>
-      <span className={`ptoggle${p.dense ? ' on' : ''}`} title="切换密度"
+      <span className={`ptoggle${p.dense ? ' on' : ''}`}
         onClick={() => p.setDense(!p.dense)}>
         {p.dense ? <LayoutGrid size={14} /> : <Rows3 size={14} />}
-        {p.dense ? '紧凑' : '舒适'}
+        {p.dense ? t('dense') : t('cozy')}
       </span>
-      <button className="btn" onClick={p.onExport}>导出筛选 JSON</button>
+      <span className="ptoggle" onClick={() => p.setLang(p.lang === 'zh' ? 'en' : 'zh')}>
+        {p.lang === 'zh' ? 'EN' : '中文'}
+      </span>
+      <button className="btn" onClick={p.onExport}>{t('exportFiltered')}</button>
     </div>
   );
 }

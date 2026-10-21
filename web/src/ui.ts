@@ -1,14 +1,14 @@
 /** 复制文本到剪贴板，file:// 等非安全上下文走 execCommand 回退。 */
-export function copyText(text: string, msg = '已复制') {
+export function copyText(text: string, msg: string, failMsg: string) {
   const done = () => toast(msg);
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(done).catch(() => fallback(text, done));
+    navigator.clipboard.writeText(text).then(done).catch(() => fallback(text, done, failMsg));
   } else {
-    fallback(text, done);
+    fallback(text, done, failMsg);
   }
 }
 
-function fallback(text: string, done: () => void) {
+function fallback(text: string, done: () => void, failMsg: string) {
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.style.cssText = 'position:fixed;opacity:0';
@@ -18,7 +18,7 @@ function fallback(text: string, done: () => void) {
     document.execCommand('copy');
     done();
   } catch {
-    toast('复制失败，请手动复制');
+    toast(failMsg);
   }
   ta.remove();
 }

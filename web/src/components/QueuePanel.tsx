@@ -1,31 +1,42 @@
-import { Check, Download, Loader2, X, XCircle } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import type { TFunc } from '../i18n';
 import type { QueueItem } from '../types';
 
-export default function QueuePanel({ items, clear }: { items: QueueItem[]; clear: () => void }) {
+type Props = {
+  items: QueueItem[];
+  open: boolean;
+  setOpen: (b: boolean) => void;
+  clear: () => void;
+  t: TFunc;
+};
+
+const STATE_KEY = { wait: 'qWait', dl: 'qDl', done: 'qDone', err: 'qErr' } as const;
+
+export default function QueuePanel({ items, open, setOpen, clear, t }: Props) {
   if (!items.length) return null;
-  const pending = items.filter(i => i.state === 'wait' || i.state === 'dl').length;
+  const active = items.filter(i => i.state === 'dl' || i.state === 'wait').length;
   return (
     <div className="queue">
-      <h4>
-        <Download size={14} />下载队列
-        {pending === 0 && (
-          <button className="xbtn" style={{ marginLeft: 'auto' }} onClick={clear} title="清空">
-            <X size={14} />
-          </button>
-        )}
+      <h4 style={{ cursor: 'pointer' }} onClick={() => setOpen(!open)}>
+        {active ? <Loader2 size={14} className="spin" /> : <CheckCircle2 size={14} />}
+        {t('queueTitle')} · {items.length}
+        <span style={{ marginLeft: 'auto', display: 'inline-flex' }}>
+          {open ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+        </span>
       </h4>
-      {items.slice(-8).map((i, k) => (
-        <div key={k} className={`qitem ${i.state}`}>
-          {i.state === 'dl' && <Loader2 size={12} className="spin" />}
-          {i.state === 'done' && <Check size={12} />}
-          {i.state === 'err' && <XCircle size={12} />}
-          {i.state === 'wait' && <span className="st">··</span>}
-          <span className="fn">{i.fname}</span>
-          <span className="st">
-            {i.state === 'dl' ? '下载中' : i.state === 'done' ? '完成' : i.state === 'err' ? '失败' : '等待'}
-          </span>
-        </div>
-      ))}
+      {open && (
+        <>
+          {items.map((it, i) => (
+            <div key={i} className={`qitem ${it.state}`}>
+              <span className="fn">{it.fname}</span>
+              <span className="st">{t(STATE_KEY[it.state])}</span>
+            </div>
+          ))}
+          <div className="mrow" style={{ marginTop: 8 }}>
+            <button className="btn" onClick={clear}>{t('queueClear')}</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

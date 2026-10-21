@@ -1,7 +1,8 @@
 import { memo, useRef } from 'react';
 import { Bookmark, Copy, Download, HardDrive, Play } from 'lucide-react';
 import { mediaSrc } from '../api';
-import { CAT_LABELS, STATUS_LABELS, TECH_LABELS } from '../labels';
+import type { Lang, TFunc } from '../i18n';
+import { catLabel, statusLabel, techLabel } from '../labels';
 import type { Entry, Manifest, OpsStatus } from '../types';
 import { copyText } from '../ui';
 
@@ -12,9 +13,11 @@ type Props = {
   onOpen: () => void;
   onMark: () => void;
   onDownload: () => void;
+  lang: Lang;
+  t: TFunc;
 };
 
-export default memo(function VideoCard({ v, manifest, status, onOpen, onMark, onDownload }: Props) {
+export default memo(function VideoCard({ v, manifest, status, onOpen, onMark, onDownload, lang, t }: Props) {
   const vidRef = useRef<HTMLVideoElement>(null);
   const preview: 'card' | 'remake_card' | null = v.urls.card ? 'card' : v.urls.remake_card ? 'remake_card' : null;
   const local = !!manifest[v.slug];
@@ -35,30 +38,30 @@ export default memo(function VideoCard({ v, manifest, status, onOpen, onMark, on
         )}
         {preview && <span className="play-glyph"><Play size={17} fill="currentColor" /></span>}
         <span className="badges">
-          {local && <span className="badge local"><HardDrive size={10} style={{ marginRight: 3, verticalAlign: -1 }} />本地</span>}
-          {!v.has_remake && <span className="badge novid">仅原帖</span>}
+          {local && <span className="badge local"><HardDrive size={10} style={{ marginRight: 3, verticalAlign: -1 }} />{t('badgeLocal')}</span>}
+          {!v.has_remake && <span className="badge novid">{t('badgeNoVideo')}</span>}
         </span>
-        {status && <span className={`ribbon ${status}`}>{STATUS_LABELS[status]}</span>}
+        {status && <span className={`ribbon ${status}`}>{statusLabel(status, lang)}</span>}
       </div>
       <div className="cbody">
         <div className="prompt">{v.prompt}</div>
         <div className="meta">
           <a className="author" href={v.author_url} target="_blank" rel="noopener">@{v.author}</a>
-          <span className="cat">{CAT_LABELS[v.category] || v.category}</span>
-          <span className="techs">{v.tech.slice(0, 3).map(t => TECH_LABELS[t] || t).join(' · ')}</span>
+          <span className="cat">{catLabel(v.category, lang)}</span>
+          <span className="techs">{v.tech.slice(0, 3).map(tg => techLabel(tg, lang)).join(' · ')}</span>
           <span className="date">{v.added}</span>
         </div>
         <div className="cactions">
-          <button className="ibtn grow" onClick={() => copyText(v.prompt, 'prompt 已复制')}>
-            <Copy size={13} />复制 prompt
+          <button className="ibtn grow" onClick={() => copyText(v.prompt, t('toastCopied'), t('toastCopyFail'))}>
+            <Copy size={13} />{t('copyPrompt')}
           </button>
-          <button className={`ibtn${status === 'pick' ? ' marked' : ''}`} title="标为备选" onClick={onMark}>
+          <button className={`ibtn${status === 'pick' ? ' marked' : ''}`} title={t('tipMarkPick')} onClick={onMark}>
             <Bookmark size={13} />
           </button>
-          <button className="ibtn" title="下载视频" onClick={onDownload} disabled={!v.urls.original && !v.urls.remake}>
+          <button className="ibtn" title={t('tipDownload')} onClick={onDownload} disabled={!v.urls.original && !v.urls.remake}>
             <Download size={13} />
           </button>
-          <button className="ibtn" onClick={onOpen}>详情</button>
+          <button className="ibtn" onClick={onOpen}>{t('details')}</button>
         </div>
       </div>
     </div>

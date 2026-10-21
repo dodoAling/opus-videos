@@ -6,6 +6,7 @@ import QueuePanel from './components/QueuePanel';
 import Rail from './components/Rail';
 import TopBar from './components/TopBar';
 import VideoCard from './components/VideoCard';
+import { useLang } from './i18n';
 import { useOps } from './ops';
 import type { Entry, Manifest, MediaKind, OpsStatus, QueueItem } from './types';
 import { toast } from './ui';
@@ -14,6 +15,7 @@ type View = 'all' | OpsStatus;
 const PAGE = 48;
 
 export default function App() {
+  const { lang, setLang, t } = useLang();
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [manifest, setManifest] = useState<Manifest>({});
   const [error, setError] = useState('');
@@ -30,6 +32,7 @@ export default function App() {
   const [shown, setShown] = useState(PAGE);
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [qOpen, setQOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -50,9 +53,14 @@ export default function App() {
   }, [load]);
 
   useEffect(() => {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = t('brand');
+  }, [lang, t]);
+
+  useEffect(() => {
     if (!toastMsg) return;
-    const t = setTimeout(() => setToastMsg(''), 1800);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setToastMsg(''), 1800);
+    return () => clearTimeout(tm);
   }, [toastMsg]);
 
   const toggle = (set: Set<string>) => (k: string) => {
@@ -61,7 +69,7 @@ export default function App() {
     return next;
   };
   const toggleCat = (c: string) => setCats(toggle(cats)(c));
-  const toggleTech = (t: string) => setTechs(toggle(techs)(t));
+  const toggleTech = (tg: string) => setTechs(toggle(techs)(tg));
 
   const filtered = useMemo(() => {
     if (!entries) return [];
@@ -69,7 +77,7 @@ export default function App() {
     const list = entries.filter(v => {
       if (view !== 'all' && ops[v.slug]?.status !== view) return false;
       if (cats.size && !cats.has(v.category)) return false;
-      if (techs.size && !v.tech.some(t => techs.has(t))) return false;
+      if (techs.size && !v.tech.some(tg => techs.has(tg))) return false;
       if (onlyVideo && !v.has_remake) return false;
       if (onlyFull && v.prompt_partial) return false;
       if (needle) {
@@ -94,19 +102,18 @@ export default function App() {
     return () => ob.disconnect();
   }, []);
 
-  // --- download queue ---
   const enqueue = useCallback((v: Entry, kind: MediaKind) => {
     const href = dlHref(v, manifest, kind);
     const fname = `${v.slug}-${KIND_FILE[kind]}`;
-    if (!href) { toast('该条目没有可下载文件'); return; }
+    if (!href) { toast(t('toastNoFile')); return; }
     if (!DL_BASE && /^https?:/.test(href)) {
       window.open(href, '_blank');
-      toast('已在新标签打开，Ctrl+S 保存');
+      toast(t('toastOpened'));
       return;
     }
     setQueue(qq => [...qq, { slug: v.slug, kind, fname, href, state: 'wait' }]);
-    toast('已加入下载队列');
-  }, [manifest]);
+    toast(t('toastQueued'));
+  }, [manifest, t]);
 
   useEffect(() => {
     const item = queue.find(i => i.state === 'wait');
@@ -132,18 +139,18 @@ export default function App() {
   const markPick = useCallback((v: Entry) => {
     const cur = ops[v.slug]?.status;
     setStatus(v.slug, cur === 'pick' ? undefined : 'pick');
-    toast(cur === 'pick' ? '已取消备选' : '已加入备选');
-  }, [ops, setStatus]);
+    toast(t(cur === 'pick' ? 'toastUnpick' : 'toastPick'));
+  }, [ops, setStatus, t]);
 
   const onExport = useCallback(() => {
     const blob = new Blob([JSON.stringify(filtered, null, 1)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `opus-videos-${filtered.length}条.json`;
+    a.download = `opus-videos-${filtered.length}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    toast(`已导出 ${filtered.length} 条`);
-  }, [filtered]);
+    toast(t('toastExported', { n: filtered.length }));
+  }, [filtered, t]);
 
   const openEntry = openIdx != null ? filtered[openIdx] : null;
   const navModal = useCallback((dir: 1 | -1) => {
@@ -156,22 +163,22 @@ export default function App() {
     <div className="shell">
       <Rail entries={entries || []} ops={ops} view={view} setView={setView}
         cats={cats} toggleCat={toggleCat} techs={techs} toggleTech={toggleTech}
-        exportOps={exportOps} />
+        exportOps={exportOps} lang={lang} t={t} />
 
       <div className="main">
-        <TopBar q={q} setQ={setQ} total={filtered.length} shown={shown}
+        <TopBar q={q} setQ={setQ} total={filtered.length}
           videoCount={videoCount}
           onlyVideo={onlyVideo} setOnlyVideo={setOnlyVideo}
           onlyFull={onlyFull} setOnlyFull={setOnlyFull}
           sort={sort} setSort={setSort} dense={dense} setDense={setDense}
-          onExport={onExport} />
+          onExport={onExport} lang={lang} setLang={setLang} t={t} />
 
         {error && (
           <div className="center-state">
             <AlertTriangle size={36} />
-            <h2>数据加载失败</h2>
-            <p>{error}。若直接双击打开了 index.html，请先运行 <code>python scripts/serve.py</code> 再访问 http://localhost:8791。</p>
-            <button className="btn" onClick={load}>重试</button>
+            <h2>{t('loadFail')}</h2>
+            <p>{error}. {t('loadFailHint')}</p>
+            <button className="btn" onClick={load}>{t('retry')}</button>
           </div>
         )}
         {!error && !entries && (
@@ -188,8 +195,8 @@ export default function App() {
         {!error && entries && filtered.length === 0 && (
           <div className="center-state">
             <Film size={36} />
-            <h2>没有匹配的素材</h2>
-            <p>试试放宽筛选或换个关键词。</p>
+            <h2>{t('emptyTitle')}</h2>
+            <p>{t('emptyHint')}</p>
           </div>
         )}
         {entries && filtered.length > 0 && (
@@ -199,7 +206,8 @@ export default function App() {
                 status={ops[v.slug]?.status}
                 onOpen={() => setOpenIdx(filtered.indexOf(v))}
                 onMark={() => markPick(v)}
-                onDownload={() => enqueue(v, v.urls.original ? 'original' : 'card')} />
+                onDownload={() => enqueue(v, v.urls.original ? 'original' : 'card')}
+                lang={lang} t={t} />
             ))}
           </div>
         )}
@@ -210,15 +218,16 @@ export default function App() {
         <DetailModal v={openEntry} manifest={manifest}
           status={ops[openEntry.slug]?.status}
           note={ops[openEntry.slug]?.note || ''}
-          setStatus={s => setStatus(openEntry.slug, s)}
-          setNote={n => setNote(openEntry.slug, n)}
+          onStatus={s => setStatus(openEntry.slug, s)}
+          onNote={n => setNote(openEntry.slug, n)}
           onDownload={kind => enqueue(openEntry, kind)}
           onClose={() => setOpenIdx(null)}
-          onNav={navModal} idx={openIdx!} total={filtered.length} />
+          onNav={navModal} idx={openIdx!} total={filtered.length}
+          lang={lang} t={t} />
       )}
 
-      <QueuePanel items={queue}
-        clear={() => setQueue(qq => qq.filter(i => i.state === 'wait' || i.state === 'dl'))} />
+      <QueuePanel items={queue} open={qOpen} setOpen={setQOpen}
+        clear={() => setQueue(qq => qq.filter(i => i.state === 'wait' || i.state === 'dl'))} t={t} />
       <div className={`toast${toastMsg ? ' show' : ''}`}>{toastMsg}</div>
     </div>
   );
