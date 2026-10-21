@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opus 5.5 视频灵感库</title>
+<style>
+  :root {
+    --bg: #0e1013;
+    --panel: #171a20;
+    --panel2: #1f232b;
+    --border: #2a2f38;
+    --text: #e8eaed;
+    --muted: #9aa0aa;
+    --accent: #e8613c;
+    --accent2: #f5a524;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 14px/1.55 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  a { color: inherit; }
+
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(14,16,19,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+  }
+  .topbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .topbar h1 { font-size: 18px; font-weight: 700; white-space: nowrap; }
+  .topbar h1 .dot { color: var(--accent); }
+  .stats { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  #search {
+    flex: 1; min-width: 200px; max-width: 420px;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 8px 12px; font-size: 13px;
+    outline: none;
+  }
+  #search:focus { border-color: var(--accent); }
+  .btn {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.1); color: #fff; }
+
+  .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .chip {
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 999px; padding: 4px 12px; font-size: 12px; cursor: pointer;
+    user-select: none;
+  }
+  .chip:hover { color: var(--text); }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip.tech.on { background: var(--panel2); border-color: var(--accent2); color: var(--accent2); }
+  .chip .n { opacity: .7; font-size: 11px; }
+  .filter-sep { width: 1px; height: 18px; background: var(--border); }
+  select {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 5px 8px; font-size: 12px; outline: none;
+  }
+
+  #grid {
+    display: grid; gap: 16px; padding: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
+    transition: border-color .15s;
+  }
+  .card:hover { border-color: #3d4450; }
+  .media {
+    position: relative; aspect-ratio: 16/9; background: #000; cursor: pointer;
+    overflow: hidden;
+  }
+  .media video, .media img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .media.has-vid::after {
+    content: '▶'; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(0,0,0,.55); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; padding-left: 3px;
+    opacity: .85; transition: opacity .15s; pointer-events: none;
+  }
+  .card:hover .media::after { opacity: 0; }
+  .badge-local {
+    position: absolute; left: 8px; top: 8px;
+    background: rgba(20,160,90,.9); color: #fff;
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  }
+  .badge-novideo {
+    position: absolute; left: 8px; top: 8px;
+    background: rgba(0,0,0,.65); color: var(--muted);
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  }
+  .card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .prompt-preview {
+    font-size: 12.5px; color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; min-height: 2.6em;
+  }
+  .meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .author { font-size: 12px; color: var(--muted); text-decoration: none; }
+  .author:hover { color: var(--accent); }
+  .cat-tag {
+    font-size: 11px; padding: 1px 8px; border-radius: 999px;
+    background: var(--panel2); color: var(--accent2); border: 1px solid var(--border);
+  }
+  .tech-tag { font-size: 11px; color: var(--muted); }
+  .date { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .card-actions { display: flex; gap: 8px; margin-top: auto; }
+  .card-actions .btn { flex: 1; padding: 6px 0; font-size: 12px; text-align: center; }
+
+  #sentinel { height: 1px; }
+  #empty { text-align: center; color: var(--muted); padding: 60px 0; display: none; }
+
+  dialog {
+    border: none; padding: 0; background: transparent;
+    max-width: 1200px; width: 95vw; max-height: 95vh;
+    /* *{margin:0} reset kills the UA centering; restore it. */
+    margin: auto;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.75); }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; max-height: 88vh;
+    display: flex; flex-direction: column;
+  }
+  .modal-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .modal-head .who { font-weight: 600; }
+  .modal-head .close {
+    margin-left: auto; background: none; border: none; color: var(--muted);
+    font-size: 22px; cursor: pointer; line-height: 1;
+  }
+  .modal-head .close:hover { color: var(--text); }
+  .modal-body { overflow-y: auto; padding: 16px; }
+  .videos { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  .videos.two { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 720px) { .videos.two { grid-template-columns: 1fr; } }
+  .videos figure {
+    background: #000; border-radius: 10px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .videos .vwrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    min-height: 200px;
+  }
+  .videos video {
+    display: block; margin: 0 auto;
+    max-width: 100%; max-height: 64vh; object-fit: contain;
+  }
+  .videos figcaption {
+    font-size: 12px; color: var(--muted); padding: 8px 10px;
+    background: var(--panel2);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .videos figcaption .cap-actions { margin-left: auto; display: flex; gap: 6px; }
+  .videos figcaption .btn { padding: 3px 10px; font-size: 11px; }
+  .prompt-block {
+    margin-top: 14px; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    white-space: pre-wrap; font-size: 13px; line-height: 1.7;
+    max-height: 260px; overflow-y: auto;
+  }
+  .partial-note { color: var(--accent2); font-size: 12px; margin-top: 6px; }
+  .modal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .modal-meta { margin-top: 12px; font-size: 12px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+  .modal-meta a { color: var(--accent); text-decoration: none; }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--panel2); border: 1px solid var(--accent); color: var(--text);
+    padding: 8px 18px; border-radius: 999px; font-size: 13px;
+    opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <h1>Opus 5.5 <span class="dot">视频灵感库</span></h1>
+    <span class="stats" id="stats"></span>
+    <input id="search" type="search" placeholder="搜索 prompt / 作者 / slug…">
+    <button class="btn" id="exportBtn">导出当前筛选 JSON</button>
+  </div>
+  <div class="filters" id="catFilters"></div>
+  <div class="filters" id="techFilters"></div>
+</header>
+
+<main>
+  <div id="grid"></div>
+  <div id="empty">没有匹配的条目</div>
+  <div id="sentinel"></div>
+</main>
+
+<dialog id="dlg"><div class="modal" id="modalBox"></div></dialog>
+<div id="toast"></div>
+
+<script src="data.js"></script>
+<script src="media/local-manifest.js"></script>
+<script>
+const DATA = window.OPUS_DATA || [];
+const LOCAL = window.LOCAL_MEDIA || {};
+
+const CAT_LABELS = { motion: '动效', explainer: '讲解', '3d': '3D 场景', interactive: '游戏互动' };
+const TECH_LABELS = {
+  canvas: 'Canvas', svg: 'SVG', threejs: 'Three.js', shader: 'Shader',
+  gsap: 'GSAP', css: 'CSS', audio: '音频', playable: '可玩',
+  particles: '粒子', pixel: '像素', webgl: 'WebGL', physics: '物理',
+  'ai-image': 'AI 图片',
+};
+
+const state = { q: '', cats: new Set(), techs: new Set(),
+                onlyVideo: false, onlyFull: false, sort: 'new', shown: 60 };
+
+const LOCAL_NAMES = {
+  poster: 'poster.webp', remake_poster: 'remake_poster.webp',
+  card: 'card.mp4', remake_card: 'remake_card.mp4',
+  original: 'original.mp4', remake: 'remake.mp4',
+};
+function mediaSrc(v, kind) {
+  const local = LOCAL[v.slug];
+  if (local && local[kind]) return 'media/' + v.slug + '/' + LOCAL_NAMES[kind];
+  return v.urls[kind];
+}
+const hasLocal = v => !!LOCAL[v.slug];
+
+// When served by scripts/serve.py, /dl/ streams files with a download
+// disposition (local mirror first, else proxied from the CDN).
+let DL_BASE = null;
+fetch('dl/ping', { method: 'HEAD' })
+  .then(r => { if (r.status === 204) DL_BASE = 'dl/'; })
+  .catch(() => {});
+
+function dlHref(v, kind) {
+  if (DL_BASE) return DL_BASE + v.slug + '/' + LOCAL_NAMES[kind];
+  return mediaSrc(v, kind);
+}
+function dlAttrs(v, kind, fname) {
+  const href = dlHref(v, kind);
+  const sameOrigin = DL_BASE || !/^https?:/.test(href);
+  return `href="${href}" ${sameOrigin ? `download="${v.slug}-${fname}"` : 'target="_blank"'} rel="noopener"`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+function copyText(text, msg) {
+  const done = () => toast(msg || '已复制');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); }
+  catch { toast('复制失败，请手动复制'); }
+  ta.remove();
+}
+
+function filtered() {
+  const q = state.q.trim().toLowerCase();
+  let list = DATA.filter(v => {
+    if (state.cats.size && !state.cats.has(v.category)) return false;
+    if (state.techs.size && !v.tech.some(t => state.techs.has(t))) return false;
+    if (state.onlyVideo && !v.has_remake) return false;
+    if (state.onlyFull && v.prompt_partial) return false;
+    if (q) {
+      const hay = (v.prompt + ' ' + v.author + ' ' + v.slug + ' ' + (v.title || '')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  list.sort((a, b) => state.sort === 'new'
+    ? b.added.localeCompare(a.added) : a.added.localeCompare(b.added));
+  return list;
+}
+
+const grid = document.getElementById('grid');
+let currentList = [];
+
+function esc(s) {
+  return s.replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function cardEl(v) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  const preview = v.urls.card ? 'card' : (v.urls.remake_card ? 'remake_card' : null);
+  const mediaHtml = preview
+    ? `<video src="${mediaSrc(v, preview)}" poster="${mediaSrc(v, 'poster')}"
+         muted loop playsinline preload="none"></video>`
+    : `<img src="${mediaSrc(v, 'poster')}" loading="lazy" alt="">`;
+  el.innerHTML = `
+    <div class="media${preview ? ' has-vid' : ''}">
+      ${mediaHtml}
+      ${hasLocal(v) ? '<span class="badge-local">已镜像</span>'
+        : (v.has_remake ? '' : '<span class="badge-novideo">仅原帖</span>')}
+    </div>
+    <div class="card-body">
+      <div class="prompt-preview">${esc(v.prompt)}</div>
+      <div class="meta-row">
+        <a class="author" href="${v.author_url}" target="_blank" rel="noopener">@${esc(v.author)}</a>
+        <span class="cat-tag">${CAT_LABELS[v.category] || v.category}</span>
+        ${v.tech.slice(0, 3).map(t => `<span class="tech-tag">${TECH_LABELS[t] || t}</span>`).join('')}
+        <span class="date">${v.added}</span>
+      </div>
+      <div class="card-actions">
+        <button class="btn act-copy">复制 prompt</button>
+        <button class="btn primary act-open">详情</button>
+      </div>
+    </div>`;
+  const media = el.querySelector('.media');
+  const vid = media.querySelector('video');
+  if (vid) {
+    media.addEventListener('mouseenter', () => vid.play().catch(() => {}));
+    media.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
+  }
+  media.addEventListener('click', () => openModal(v));
+  el.querySelector('.act-copy').addEventListener('click', () =>
+    copyText(v.prompt, 'prompt 已复制'));
+  el.querySelector('.act-open').addEventListener('click', () => openModal(v));
+  return el;
+}
+
+function render(append) {
+  if (!append) {
+    currentList = filtered();
+    state.shown = 60;
+    grid.innerHTML = '';
+  }
+  const slice = currentList.slice(0, state.shown);
+  const frag = document.createDocumentFragment();
+  for (let i = grid.children.length; i < slice.length; i++) {
+    frag.appendChild(cardEl(slice[i]));
+  }
+  grid.appendChild(frag);
+  document.getElementById('empty').style.display = currentList.length ? 'none' : 'block';
+  document.getElementById('stats').textContent =
+    `${currentList.length} / ${DATA.length} 条 · ${DATA.filter(v => v.has_remake).length} 条含视频`;
+}
+
+const dlg = document.getElementById('dlg');
+const modalBox = document.getElementById('modalBox');
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+
+function openModal(v) {
+  const parts = [];
+  if (v.urls.original) {
+    parts.push(`
+      <figure>
+        <div class="vwrap"><video src="${mediaSrc(v, 'original')}" controls autoplay muted loop playsinline
+               poster="${mediaSrc(v, 'poster')}"></video></div>
+        <figcaption>原版 · @${esc(v.author)}
+          <span class="cap-actions">
+            <button class="btn act-fs">全屏</button>
+            <a class="btn" ${dlAttrs(v, 'original', 'original.mp4')}>下载 mp4</a>
+          </span>
+        </figcaption>
+      </figure>`);
+  }
+  if (v.urls.remake) {
+    parts.push(`
+      <figure>
+        <div class="vwrap"><video src="${mediaSrc(v, 'remake')}" controls muted loop playsinline
+               ${v.urls.remake_poster ? `poster="${mediaSrc(v, 'remake_poster')}"` : ''}></video></div>
+        <figcaption>重制版 · skillry
+          <span class="cap-actions">
+            <button class="btn act-fs">全屏</button>
+            <a class="btn" ${dlAttrs(v, 'remake', 'remake.mp4')}>下载 mp4</a>
+          </span>
+        </figcaption>
+      </figure>`);
+  }
+  const shareText =
+    `${v.title ? v.title + '\n' : ''}作者 @${v.author} 用 Claude Opus 5.5 生成的代码动画\n\n` +
+    `Prompt：${v.prompt}\n\n原帖：${v.post_url}`;
+
+  modalBox.innerHTML = `
+    <div class="modal-head">
+      <span class="who">@${esc(v.author)}</span>
+      <span class="cat-tag">${CAT_LABELS[v.category] || v.category}</span>
+      <button class="close" title="关闭">&times;</button>
+    </div>
+    <div class="modal-body">
+      ${parts.length ? `<div class="videos ${parts.length > 1 ? 'two' : ''}">${parts.join('')}</div>`
+        : `<p style="color:var(--muted)">此条目无托管视频，请到原帖观看。</p>`}
+      <div class="prompt-block">${esc(v.prompt)}</div>
+      ${v.prompt_partial ? '<div class="partial-note">注：作者只公开了部分 prompt</div>' : ''}
+      <div class="modal-actions">
+        <button class="btn primary" id="mCopy">复制 prompt</button>
+        <button class="btn" id="mShare">复制分享文案</button>
+        <a class="btn" ${dlAttrs(v, 'poster', 'poster.webp')}>下载封面</a>
+        <a class="btn" href="${v.post_url}" target="_blank" rel="noopener">原帖 ↗</a>
+        <a class="btn" href="https://skillry.dev/ai-videos/opus-5-5/${v.slug}"
+           target="_blank" rel="noopener">Skillry 页面 ↗</a>
+      </div>
+      <div class="modal-meta">
+        <span>slug: ${v.slug}</span>
+        <span>收录: ${v.added}</span>
+        <span>技术: ${v.tech.map(t => TECH_LABELS[t] || t).join(' · ')}</span>
+      </div>
+    </div>`;
+  modalBox.querySelector('.close').addEventListener('click', () => dlg.close());
+  modalBox.querySelector('#mCopy').addEventListener('click', () =>
+    copyText(v.prompt, 'prompt 已复制'));
+  modalBox.querySelector('#mShare').addEventListener('click', () =>
+    copyText(shareText, '分享文案已复制'));
+  const toggleFs = vid => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (vid.requestFullscreen) vid.requestFullscreen();
+    else if (vid.webkitEnterFullscreen) vid.webkitEnterFullscreen();
+  };
+  modalBox.querySelectorAll('.act-fs').forEach(btn =>
+    btn.addEventListener('click', () =>
+      toggleFs(btn.closest('figure').querySelector('video'))));
+  modalBox.querySelectorAll('.videos video').forEach(vid =>
+    vid.addEventListener('dblclick', () => toggleFs(vid)));
+  if (!dlg.open) dlg.showModal();
+}
+dlg.addEventListener('close', () => { modalBox.innerHTML = ''; });
+
+// --- filters ---
+function buildFilters() {
+  const catBox = document.getElementById('catFilters');
+  const catCount = {};
+  DATA.forEach(v => catCount[v.category] = (catCount[v.category] || 0) + 1);
+  catBox.innerHTML =
+    `<span style="font-size:12px;color:var(--muted)">分类</span>` +
+    Object.keys(CAT_LABELS).map(c =>
+      `<span class="chip" data-cat="${c}">${CAT_LABELS[c]} <span class="n">${catCount[c] || 0}</span></span>`
+    ).join('') +
+    `<span class="filter-sep"></span>
+     <span class="chip" id="fVideo">仅看有视频</span>
+     <span class="chip" id="fFull">仅完整 prompt</span>
+     <span class="filter-sep"></span>
+     <select id="sortSel">
+       <option value="new">最新收录</option>
+       <option value="old">最早收录</option>
+     </select>`;
+  catBox.querySelectorAll('[data-cat]').forEach(ch =>
+    ch.addEventListener('click', () => {
+      const c = ch.dataset.cat;
+      state.cats.has(c) ? state.cats.delete(c) : state.cats.add(c);
+      ch.classList.toggle('on');
+      render();
+    }));
+  catBox.querySelector('#fVideo').addEventListener('click', e => {
+    state.onlyVideo = !state.onlyVideo;
+    e.target.classList.toggle('on', state.onlyVideo);
+    render();
+  });
+  catBox.querySelector('#fFull').addEventListener('click', e => {
+    state.onlyFull = !state.onlyFull;
+    e.target.classList.toggle('on', state.onlyFull);
+    render();
+  });
+  catBox.querySelector('#sortSel').addEventListener('change', e => {
+    state.sort = e.target.value;
+    render();
+  });
+
+  const techBox = document.getElementById('techFilters');
+  const techCount = {};
+  DATA.forEach(v => v.tech.forEach(t => techCount[t] = (techCount[t] || 0) + 1));
+  const techs = Object.keys(techCount).sort((a, b) => techCount[b] - techCount[a]);
+  techBox.innerHTML =
+    `<span style="font-size:12px;color:var(--muted)">技术</span>` +
+    techs.map(t =>
+      `<span class="chip tech" data-tech="${t}">${TECH_LABELS[t] || t} <span class="n">${techCount[t]}</span></span>`
+    ).join('');
+  techBox.querySelectorAll('[data-tech]').forEach(ch =>
+    ch.addEventListener('click', () => {
+      const t = ch.dataset.tech;
+      state.techs.has(t) ? state.techs.delete(t) : state.techs.add(t);
+      ch.classList.toggle('on');
+      render();
+    }));
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  state.q = e.target.value;
+  render();
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(currentList, null, 1)],
+    { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `opus-videos-${currentList.length}条.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`已导出 ${currentList.length} 条`);
+});
+
+new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting && state.shown < currentList.length) {
+    state.shown += 60;
+    render(true);
+  }
+}).observe(document.getElementById('sentinel'));
+
+buildFilters();
+render();
+</script>
+</body>
+</html>
