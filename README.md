@@ -3,6 +3,12 @@
 703 条 AI 代码动画 prompt 素材的本地运营库：刷视频、抄 prompt、下载 mp4、
 标记发布状态，服务自有自媒体账号的选题与二创。
 
+## 截图
+
+![素材库主页：左栏状态分组与筛选，卡片悬停播放预览](docs/media/home.png)
+
+![详情弹窗：原版与重制版并排播放，状态标记、备注与一键复制](docs/media/detail.png)
+
 ## 使用
 
 ```powershell
@@ -71,3 +77,6 @@ python scripts/build_data.py
 - 邮箱：[dodoaling@163.com](mailto:dodoaling@163.com)
 - X (Twitter)：[@DodoAling](https://x.com/DodoAling)
 - 微信：`dodoaling`
+- 微信公众号：`DodoAling` —— 扫码关注，或在微信内搜索：
+
+<img src="docs/media/wechat-mp-qr.png" alt="微信公众号二维码：扫码或在微信内搜索 DodoAling" width="300">
