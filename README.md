@@ -1,7 +1,19 @@
 # Opus 5.5 视频素材工作站
 
-703 条 AI 代码动画 prompt 素材的本地运营库：刷视频、抄 prompt、下载 mp4、
-标记发布状态，服务自有自媒体账号的选题与二创。
+**[github.com/dodoAling/opus-videos](https://github.com/dodoAling/opus-videos)**
+
+[![GitHub stars](https://img.shields.io/github/stars/dodoAling/opus-videos?style=flat&color=f2b544)](https://github.com/dodoAling/opus-videos/stargazers)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-9aa7bd)](https://github.com/dodoAling/opus-videos)
+
+把 703 条 AI 代码动画 prompt 素材收进一个本地网页库——刷视频、抄 prompt、
+下 mp4、标发布状态，服务自有自媒体账号的选题与二创。
+
+- **刷素材** —— 分类 / 技术栈 / 关键词筛 703 条，悬停播预览，详情页 ← → 连刷
+- **抄 prompt** —— 中文译文与英文原文一键切换，复制按钮复制当前显示的版本
+- **下视频** —— 本地代理强制存盘 mp4，多条加入队列顺序下载
+- **管进度** —— 备选 / 已发 / 跳过 + 备注，运营状态可导出备份
+
+界面中英文切换，全部数据与状态留在本机。
 
 ## 截图
 
